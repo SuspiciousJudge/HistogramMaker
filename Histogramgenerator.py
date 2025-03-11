@@ -1,35 +1,54 @@
 import csv
-import random
 import matplotlib.pyplot as plt
 
-def generate_random_count():
-    # Replace with your preferred random number generation logic
-    return random.randint(1, 100)  # Example: Generates counts between 1 and 100
-
-def plot_histogram(alphabets, counts):
-    plt.hist(alphabets, bins=26)
-    plt.xlabel('Alphabet')
-    plt.ylabel('Count')
-    plt.title('Histogram of Alphabet Counts')
+def plot_histogram(labels, values, column_name):
+    """Plots a histogram (bar chart) based on CSV data."""
+    plt.bar(labels, values, color='skyblue')
+    plt.xlabel('Categories')
+    plt.ylabel(column_name)
+    plt.title(f'Histogram of {column_name}')
+    plt.xticks(rotation=45)  # Rotate labels for better readability
     plt.show()
 
-# Generate CSV file
-with open('alphabet_counts.csv', 'w', newline='') as csvfile:
-    writer = csv.writer(csvfile)
-    writer.writerow(['alphabet', 'count'])
-    for alphabet in chr(65, 90):  # Iterate from A (65) to Z (90)
-        count = generate_random_count()
-        writer.writerow([alphabet, count])
+def read_csv_and_plot(file_path):
+    """Reads a CSV file and generates a histogram from user-selected columns."""
+    try:
+        with open(file_path, 'r') as csvfile:
+            reader = csv.reader(csvfile)
+            headers = next(reader)  # Extract column headers
+            
+            print("\nAvailable columns:", headers)
+            category_col = input("Enter the column name for categories (e.g., Product, Month): ").strip()
+            value_col = input("Enter the column name for values (e.g., Sales, Expenditure): ").strip()
+            
+            if category_col not in headers or value_col not in headers:
+                print("Error: One or both column names do not exist. Please check the column names.")
+                return
+            
+            category_index = headers.index(category_col)
+            value_index = headers.index(value_col)
 
-# Read CSV file and prepare data for histogram
-alphabets = []
-counts = []
-with open('alphabet_counts.csv', 'r') as csvfile:
-    reader = csv.reader(csvfile)
-    next(reader)  # Skip header row
-    for row in reader:
-        alphabets.append(row[0])
-        counts.append(int(row[1]))
+            labels = []
+            values = []
 
-# Plot histogram
-plot_histogram(alphabets, counts)
+            for row in reader:
+                labels.append(row[category_index])
+                try:
+                    values.append(float(row[value_index]))  # Convert values to float
+                except ValueError:
+                    print(f"Skipping invalid data: {row[value_index]} (Not a number)")
+                    continue
+
+        if labels and values:
+            plot_histogram(labels, values, value_col)
+        else:
+            print("Error: No valid numerical data found in the selected column.")
+    
+    except FileNotFoundError:
+        print("Error: File not found. Please check the file path and try again.")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+
+# User input for CSV file
+file_path = input("Enter the path to the CSV file: ")
+read_csv_and_plot(file_path)
